@@ -1,13 +1,13 @@
-/*
-    This is the basic idea of the PC and enemies. Each will have basic stats and a set move-list to choose from.
-    At minimum, both need to be able to deal and take damage.
+/**
+ * The skeleton of what the enemy and player (PC) will need.
+ * They will need to have health points (HP), a name, and dexterity (used for dodging).
  */
-import java.io.*;
+
 abstract class Combatant {
-    public int maxHP;
-    public int currentHP;
-    public String combatantName;
-    public int dexterity;
+    protected int maxHP;
+    protected int currentHP;
+    protected String combatantName;
+    protected int dexterity;
 
     public Combatant(String name, int startingHP, int dexterity) {
         this.maxHP = startingHP;
@@ -16,13 +16,10 @@ abstract class Combatant {
         this.dexterity = dexterity;
     }
 
-    abstract int dealDamage (boolean wasAHit, int selectedAttack);
-
-    public void takeDamage (int damageTaken){
-        this.currentHP = this.currentHP - damageTaken;
+    void takeDamage(int damageToTake){
+        this.currentHP = this.currentHP - damageToTake;
     }
 
-    abstract void heal(int selectedAttack);
 }
 
 

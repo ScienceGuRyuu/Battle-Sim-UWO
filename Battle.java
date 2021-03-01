@@ -1,47 +1,57 @@
 public class Battle {
-    static boolean doesPCMoveFirst (int PCDexterity, int EnemyDexterity){
-        return PCDexterity > EnemyDexterity;
-    }
+    static PC hero = new PC("Joe", 25, 10);
+    static Enemy monster = new Enemy("Ghost", 18, 8);
 
     static boolean isBattleHappening(int PCHP, int enemyHP){
-        if (PCHP > 0 && enemyHP >0){
-            return true;
+        return PCHP > 0 && enemyHP > 0;
+    }
+
+    static void handlePCTurn(){
+        PC.PCAttack heroAttackSelection = hero.attackSelection();
+        int heroAccuracy = hero.attemptAttack(heroAttackSelection);
+        boolean didHeroHitAttack = monster.hitByAttack(heroAccuracy);
+        int heroDamageDealt = hero.dealDamage(didHeroHitAttack, heroAttackSelection.ordinal());
+        monster.takeDamage(heroDamageDealt);
+        System.out.println("You dealt " + heroDamageDealt + " damage to the monster!");
+        if (monster.currentHP <=0){
+            System.out.println("Wow, you actually won!");
+            System.exit(0);
+        } else {
+            System.out.println("The monster has " + monster.currentHP + " HP remaining.");
         }
-        return PCHP <= 0 && enemyHP <= 0;
+    }
+
+    static void handleEnemyTurn(){
+        Enemy.EnemyAttack monsterAttackSelection = monster.attackSelection();
+        boolean didMonsterHitAttack = hero.didMonsterHitPC();
+        int monsterDamageDealt = monster.dealDamage(didMonsterHitAttack, monsterAttackSelection);
+        hero.takeDamage(monsterDamageDealt);
+        System.out.println("\nThe monster dealt " + monsterDamageDealt + " damage to you!");
+        if (hero.currentHP <= 0){
+            System.out.println("Congratulations! Your lifeless corpse will almost be remembered...");
+            System.exit(0);
+        } else {
+            System.out.println("You have " + hero.currentHP + " HP remaining.\n");
+        }
+    }
+
+    private enum AttackTurn{
+        PC, ENEMY
     }
 
     public static void main(String[] args) {
-        PC hero = new PC("Joe", 25, 10);
-        Enemy monster = new Enemy("Ghost", 18, 8);
-        int attackTurn;
-        if (hero.dexterity > monster.dexterity){
-            attackTurn = 0;
-        } else {
-            attackTurn = 1;
-        }
+        AttackTurn turn = (hero.dexterity > monster.dexterity) ? AttackTurn.PC : AttackTurn.ENEMY;
         while (isBattleHappening(hero.currentHP, monster.currentHP)){
-            switch (attackTurn) {
-                case 0 -> {
-                    int heroAttackSelection = hero.attackSelection();
-                    int heroAccuracy = hero.attemptAttack(heroAttackSelection);
-                    boolean didHeroHitAttack = monster.hitByAttack(heroAccuracy);
-                    int heroDamageDealt = hero.dealDamage(didHeroHitAttack, heroAttackSelection);
-                    monster.takeDamage(heroDamageDealt);
-                    System.out.println("You dealt " + heroDamageDealt + " damage to the monster!");
-                    System.out.println("The monster has " + monster.currentHP + " HP remaining.");
-                    attackTurn++;
+            switch (turn) {
+                case PC -> {
+                    handlePCTurn();
+                    turn = AttackTurn.ENEMY;
                 }
-                case 1 -> {
-                    int monsterAttackSelection = monster.attackSelection();
-                    boolean didMonsterHitAttack = hero.didMonsterHitPC();
-                    int monsterDamageDealt = monster.dealDamage(didMonsterHitAttack, monsterAttackSelection);
-                    hero.takeDamage(monsterDamageDealt);
-                    System.out.println("The monster dealt " + monsterDamageDealt + " damage to you!");
-                    System.out.println("You have " + hero.currentHP + " HP remaining.");
-                    attackTurn--;
+                case ENEMY -> {
+                    handleEnemyTurn();
+                    turn = AttackTurn.PC;
                 }
             }
-
         }
     }
 }

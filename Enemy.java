@@ -1,50 +1,54 @@
 import java.util.stream.IntStream;
 
-/*
-    Enemies need to give exp based on how hard they are.
-    TODO implement damage logic, experience given, and a potential level mechanic?
+/**
+ * Beyond the basics, an Enemy needs to know if an attack from PC has landed and to have a move pool.
  */
+
 public class Enemy extends Combatant {
-    // weight X dx X number of rolls
-    int[][] attacks = new int[][] { {60, 30, 10}, {2, 15, 5}, {3, 1, 1} };
+    // Weight X dx X number of rolls
+    private int[][] attacks = new int[][] { {60, 30, 10}, {2, 15, 5}, {3, 1, 1} };
+
+    public enum EnemyAttack {
+        WEAK, STRONG, HEAL
+    }
 
     public Enemy(String name, int startingHP, int dexterity) {
         super(name, startingHP, dexterity);
     }
 
-
-    public int attackSelection(){
-        Dice roller = new Dice(100);
-        int[] attackSelectionRoll = roller.rollDie(1);
-        if (attackSelectionRoll[0] < 60){
-            return 0;
-        } else if (attackSelectionRoll[0] < 90){
-            return 1;
-        } else {
-            return 2;
-        }
-
-    }
-
-    boolean hitByAttack (int opponentDexterity){
+    public boolean hitByAttack (int opponentDexterity){
         return opponentDexterity > this.dexterity;
     }
 
-    @Override
-    int dealDamage(boolean wasHit, int selectedAttack) {
-        if (selectedAttack == 2){
-            this.heal(2);
-            return 0;
+    public EnemyAttack attackSelection(){
+        int[] attackSelectionRoll = Dice.rollDice(1, 100);
+        EnemyAttack choice;
+        if (attackSelectionRoll[0] < attacks[0][0]){
+            choice = EnemyAttack.WEAK;
+        } else if (attackSelectionRoll[0] < attacks[0][0] + attacks[0][1]) {
+            choice = EnemyAttack.STRONG;
+        } else {
+            choice = EnemyAttack.HEAL;
         }
-        Dice roller = new Dice(this.attacks[1][selectedAttack]);
-        int[] rolls = roller.rollDie(this.attacks[2][selectedAttack]);
-        return IntStream.of(rolls).sum();
+        return choice;
     }
 
-    @Override
-    void heal(int selectedAttack) {
-        Dice roller = new Dice(this.attacks[1][selectedAttack]);
-        int[] rolls = roller.rollDie(this.attacks[2][selectedAttack]);
+    public int dealDamage(boolean wasHit, EnemyAttack selectedAttack) {
+        if (wasHit) {
+            if (selectedAttack == EnemyAttack.HEAL) {
+                this.heal(selectedAttack.ordinal());
+                return 0;
+            }
+            int[] rolls = Dice.rollDice(this.attacks[2][selectedAttack.ordinal()], this.attacks[1][selectedAttack.ordinal()]);
+            return IntStream.of(rolls).sum();
+        } else {
+            System.out.println('\n' + this.combatantName + " missed!");
+            return 0;
+        }
+    }
+
+    public void heal(int selectedAttack) {
+        int[] rolls = Dice.rollDice(this.attacks[2][selectedAttack], this.attacks[1][selectedAttack]);
         int damage = IntStream.of(rolls).sum();
         if (this.currentHP == this.maxHP){
             System.out.println(this.combatantName + "looks at you menacingly...");

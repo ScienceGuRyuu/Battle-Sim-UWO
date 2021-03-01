@@ -2,33 +2,32 @@ import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.stream.IntStream;
 
-/*
-    PC needs to have items to use as well as a way to gain exp and to change their stats and levels.
-    TODO implement damage logic, experience gains, stat changes, and other things as needed
+/**
+ * Beyond the basics, a PC needs to gain dexterity and to know if the monster attack landed.
  */
+
 public class PC extends Combatant{
     // accuracy X dx X number of rolls
-    int[][] attacks = new int[][] { {10, 5, 1, 100, 100}, {4, 12, 20, 9, 5}, {2, 1, 1, 1, 1} };
-    int tempDexterity;
-    int firstTurn = 0;
+    private int[][] attacks = new int[][] { {10, 5, 1, 100, 100}, {4, 12, 20, 9, 5}, {2, 1, 1, 1, 1} };
+    private int dexterityBonus;
 
     public PC(String name, int startingHP, int dexterity) {
         super(name, startingHP, dexterity);
     }
 
+    public enum PCAttack {
+        PUNCH, SLASH, WAND, HEAL, MANEUVER, NONE
+    }
 
-    void gainDexterity(int selectedAttack){
-        Dice roller = new Dice(this.attacks[1][selectedAttack]);
-        int[] rolls = roller.rollDie(this.attacks[2][selectedAttack]);
+    private void gainDexterity(int selectedAttack){
+        int[] rolls = Dice.rollDice(this.attacks[2][selectedAttack], this.attacks[1][selectedAttack]);
         int increase = IntStream.of(rolls).sum();
-        this.tempDexterity += increase;
+        this.dexterityBonus += increase;
         System.out.println("Your observation has gained you a +" + increase + " temporary dexterity bonus.");
     }
 
-    @Override
     public void heal(int selectedAttack){
-        Dice roller = new Dice(this.attacks[1][selectedAttack]);
-        int[] rolls = roller.rollDie(this.attacks[2][selectedAttack]);
+        int[] rolls = Dice.rollDice(this.attacks[2][selectedAttack], this.attacks[1][selectedAttack]);
         int damage = IntStream.of(rolls).sum();
         if (this.currentHP == this.maxHP){
             System.out.println("Everyone's vitality has an upper limit you know...");
@@ -42,10 +41,8 @@ public class PC extends Combatant{
         }
     }
 
-    @Override
-    int dealDamage(boolean wasAHit, int selectedAttack) {
-        Dice roller = new Dice(this.attacks[1][selectedAttack]);
-        int[] rolls = roller.rollDie(this.attacks[2][selectedAttack]);
+    protected int dealDamage(boolean wasAHit, int selectedAttack) {
+        int[] rolls = Dice.rollDice(this.attacks[2][selectedAttack], this.attacks[1][selectedAttack]);
         int damage = IntStream.of(rolls).sum();
         if (selectedAttack == 3) {
             this.heal(selectedAttack);
@@ -62,49 +59,54 @@ public class PC extends Combatant{
         }
     }
 
-    int attemptAttack(int selectedAttack) {
-        int accuracyBoost = this.attacks[1][selectedAttack];
+    protected int attemptAttack(PCAttack selectedAttack) {
+        int accuracyBoost = this.attacks[0][selectedAttack.ordinal()];
         return accuracyBoost + this.dexterity;
     }
 
-    int attackSelection(){
-        boolean valid_input = false;
+    protected PCAttack attackSelection(){
+        boolean validInput = false;
         Scanner input = new Scanner(System.in);
-        int PCChoice = -1;
-
-        while (!valid_input){
-            System.out.println("""
-                        Please pick an attack:\s
-                        \t 1.) Punch of Justice:
-                        \t\t A highly accurate, consitant, and boring attack.
-                        \t 2.) Slash of Destiny:
-                        \t\t A Higher risk attack that comes with more power.
-                        \t 3.) Mysterious Wand:
-                        \t\t You do not remember how you got this. Expect inconstant damage output
-                        \t 4.) Magical Healing:
-                        \t\t Heal yourself anywhere from 1 to 9 HP.
-                        \t 5.) Strategic Maneuvering:
-                        \t\t Lessen your odds of being hit next turn.""");
+        PCAttack choice = PCAttack.NONE;
+        int PCChoice;
+        while (!validInput){
+            System.out.println("Please pick an attack: \n" +
+                               "\t 1.) Punch of Justice:\n" +
+                               "\t\t A highly accurate, consistent, and boring attack.\n" +
+                               "\t 2.) Slash of Destiny:\n" +
+                               "\t\t A Higher risk attack that comes with more power.\n" +
+                               "\t 3.) Mysterious Wand:\n" +
+                               "\t\t You do not remember how you got this. Expect inconstant damage output\n" +
+                               "\t 4.) Magical Healing:\n" +
+                               "\t\t Heal yourself anywhere from 1 to 9 HP.\n" +
+                               "\t 5.) Strategic Maneuvering:\n" +
+                               "\t\t Lessen your odds of being hit next turn.");
             System.out.print("\n\nSelect 1, 2, 3, 4, or 5: ");
             try {
-                PCChoice = input.nextInt();
-                if (PCChoice > 5){
-                    throw new InputMismatchException();
+                PCChoice = Integer.parseInt(input.nextLine());
+                if (PCChoice > 5 || PCChoice <= 0){
+                    throw new ArithmeticException("Please enter a number between 1 and 5...\n");
                 }
-                valid_input = true;
-            } catch (InputMismatchException exception) {
-                System.out.println("Please enter a number from 1 to 5...");
+                validInput = true;
+                switch (PCChoice) {
+                    case 1 -> choice = PCAttack.PUNCH;
+                    case 2 -> choice = PCAttack.SLASH;
+                    case 3 -> choice = PCAttack.WAND;
+                    case 4 -> choice = PCAttack.HEAL;
+                    case 5 -> choice = PCAttack.MANEUVER;
+                }
+            } catch (NumberFormatException | ArithmeticException exception) {
+                System.out.println("Please enter a number from 1 to 5...\n");
             }
         }
             System.out.println("\n");
-            return PCChoice - 1;
+        return choice;
     }
 
     public boolean didMonsterHitPC(){
-        Dice roller = new Dice(50);
-        int[] monsterHitRoll = roller.rollDie(1);
-        boolean PCWasHit = monsterHitRoll[0] >= (45 + tempDexterity);
-        this.tempDexterity = this.dexterity;
+        int[] monsterHitRoll = Dice.rollDice(1, 50);
+        boolean PCWasHit = monsterHitRoll[0] <= (45 + dexterityBonus);
+        this.dexterityBonus = 0;
         return PCWasHit;
     }
 }
