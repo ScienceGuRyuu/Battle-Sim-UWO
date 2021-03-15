@@ -5,7 +5,7 @@ import java.util.stream.IntStream;
  */
 
 public class Enemy extends Combatant {
-    // Weight X dx X number of rolls
+    // Weight, dx, number of rolls; a better way for storing attack data on the way 
     private int[][] attacks = new int[][] { {60, 30, 10}, {2, 15, 5}, {3, 1, 1} };
 
     public enum EnemyAttack {
