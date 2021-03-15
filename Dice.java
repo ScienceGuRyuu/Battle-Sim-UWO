@@ -3,7 +3,6 @@ import java.util.stream.IntStream;
 
 /**
  * A class that will be able to handle rolling dice with variable number of sides and rolls as well as sum the rolls.
- *
  */
 
 public class Dice {
@@ -14,6 +13,7 @@ public class Dice {
         randomRoll = new Random();
         setDx(sides);
     }
+    
     /**
      * Currently unneeded constructor, left in for potential expansion of project into a more fleshed-out game.
      */
@@ -41,7 +41,7 @@ public class Dice {
     }
 
     /**
-     * Useful for cased wen a method only requires one roll procedure
+     * Useful for cased when a method only requires one roll procedure
      */
     public static int[] rollDice(int numberOfRolls, int dx){
         int[] listOfRolls = new int[numberOfRolls];
@@ -51,5 +51,4 @@ public class Dice {
         }
         return listOfRolls;
     }
-
 }
