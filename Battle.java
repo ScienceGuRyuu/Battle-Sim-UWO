@@ -1,11 +1,11 @@
 public class Battle {
     static PC hero = new PC("Joe", 25, 10);
     static Enemy monster = new Enemy("Ghost", 18, 8);
-
+    
     static boolean isBattleHappening(int PCHP, int enemyHP){
         return PCHP > 0 && enemyHP > 0;
     }
-
+    
     static void handlePCTurn(){
         PC.PCAttack heroAttackSelection = hero.attackSelection();
         int heroAccuracy = hero.attemptAttack(heroAttackSelection);
