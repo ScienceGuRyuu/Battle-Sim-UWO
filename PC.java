@@ -5,9 +5,8 @@ import java.util.stream.IntStream;
 /**
  * Beyond the basics, a PC needs to gain dexterity and to know if the monster attack landed.
  */
-
 public class PC extends Combatant{
-    // accuracy X dx X number of rolls
+    // accuracy, dx, number of rolls; a better way to store attack data on the way.
     private int[][] attacks = new int[][] { {10, 5, 1, 100, 100}, {4, 12, 20, 9, 5}, {2, 1, 1, 1, 1} };
     private int dexterityBonus;
 
